@@ -1,7 +1,6 @@
 import { 
   useEffect, 
-  useState, 
-  useContext 
+  useState
 } from "react";
 import { 
   useNavigate, 
@@ -13,10 +12,9 @@ import {
   updateUser, 
   getUserById 
 } from "../api/user.api";
-import { AuthContext } from "../../auth/context/AuthContext";
+import LogoutButton from "../components/LogoutButton";
 
 export default function UserForm() {
-  const { signOut } = useContext(AuthContext);
   const { id } = useParams();
   const { register, handleSubmit, reset } = useForm();
   const [loading, setLoading] = useState(false);
@@ -31,12 +29,7 @@ export default function UserForm() {
     }
   }, [id]);
 
-   const handleLogout = () => {
-    signOut();
-    navigate("/login");
-  };
-
-   const loadUser = async () => {
+  const loadUser = async () => {
     setLoading(true);
     const res = await getUserById(id);
     reset(res.data); 
@@ -71,6 +64,32 @@ export default function UserForm() {
     );
   }
 
+  function createNavigateButton(label, route, className) {
+    return (
+      <button 
+        type="button"
+        className={`btn btn-${className} me-2`}
+        onClick={() => navigate(route)}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  function createInput(label, data, holder, type = "text") {
+    return (
+      <div className="mb-3">
+        <label className="form-label">{label}</label>
+        <input
+          {...register(data)}
+          type={type}
+          className="form-control"
+          placeholder={holder}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-4">
       {/* Header */}
@@ -78,26 +97,10 @@ export default function UserForm() {
         <h2>{isEdit ? "Editar Usuário" : "Novo Usuário"}</h2>
 
         <div>
-          <button 
-            className="btn btn-outline-secondary me-2"
-            onClick={() => navigate("/users")}
-          >
-            Voltar
-          </button>
+          {createNavigateButton("Voltar", "/users", "outline-secondary")}
+          {createNavigateButton("+ Novo", "/user", "success")}
 
-          <button 
-            className="btn btn-success me-2"
-            onClick={() => navigate("/user")}
-          >
-            + Novo
-          </button>
-
-          <button 
-            className="btn btn-outline-danger"
-            onClick={handleLogout}
-          >
-            Sair
-          </button>
+          <LogoutButton />
         </div>
       </div>
 
@@ -105,46 +108,13 @@ export default function UserForm() {
       <div className="card shadow-sm">
         <div className="card-body">
           <form onSubmit={handleSubmit(onSubmit)}>
-          
-            {/* Nome */}
-            <div className="mb-3">
-              <label className="form-label">Nome</label>
-                <input
-                  {...register("name")}
-                  className="form-control"
-                  placeholder="Digite o nome"
-                />
-            </div>
-
-            {/* Email */}
-            <div className="mb-3">
-              <label className="form-label">Email</label>
-              <input
-                  {...register("email")}
-                  className="form-control"
-                  placeholder="Digite o email"
-              />
-            </div>
-
-            {/* Senha */}
-            <div className="mb-3">
-              <label className="form-label">Senha</label>
-              <input
-                  {...register("password")}
-                  className="form-control"
-                  placeholder="Digite a senha"
-              />
-            </div>
+            {createInput("Nome", "name", "Digite o nome")}
+            {createInput("Email", "email", "Digite o email")}
+            {createInput("Senha", "password", "Digite a senha", "password")}
 
             {/* Botões */}
             <div className="d-flex justify-content-end">
-              <button 
-                type="button"
-                className="btn btn-secondary me-2"
-                onClick={() => navigate("/users")}
-              >
-                Cancelar
-              </button>
+              {createNavigateButton("Cancelar", "/users", "secondary")}
 
               <button 
                 type="submit"

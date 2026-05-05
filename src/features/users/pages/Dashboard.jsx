@@ -1,23 +1,23 @@
 import { 
   useEffect, 
-  useState, 
-  useContext 
+  useState
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUsers } from "../api/user.api";
-import { AuthContext } from "../../auth/context/AuthContext";
 import DeleteUserButton from "../components/DeleteUserButton";
+import LogoutButton from "../components/LogoutButton";
 
 export default function Dashboard() {
-  const [data, setData] = useState({ data: [], total: 0, page: 0, pageSize: 0 });
+  const [data, setData] = useState({ data: [], total: 0, page: 0, pageSize: 0, totalPages: 0 });
   const [page, setPage] = useState(1);
-  const { signOut } = useContext(AuthContext);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
 
   const loadUsers = async () => {
     try {
-      const res = await getUsers({ page });
+      const res = await getUsers({ page, pageSize, search });
       setData(res.data);
     } catch (error) {
       const message =
@@ -28,15 +28,44 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    signOut();
-    navigate("/login");
-  };
-
   useEffect(() => {
     loadUsers();
-  }, [page]);
+  }, [page, pageSize]);
 
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setPage(1);
+      loadUsers();
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [search]);
+
+  function createNavigateButton(label, route, className) {
+    return (
+      <button 
+        type="button"
+        className={`btn btn-${className} me-2`}
+        onClick={() => navigate(route)}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  function createPaginatedButton(label, disabled, click) {
+    return (
+      <button 
+        type="button"
+        className="btn btn-outline-secondary"
+        disabled={disabled}
+        onClick={click}
+      >
+        {label}
+      </button>
+    );
+  }
+ 
   return (
     <div className="container mt-4">
       {/* Header */}
@@ -44,19 +73,37 @@ export default function Dashboard() {
         <h2>Usuários</h2>
 
         <div>
-          <button 
-            className="btn btn-success me-2"
-            onClick={() => navigate("/user")}
-          >
-            + Novo Usuário
-          </button>
+          {createNavigateButton("+ Novo Usuário", "/user", "success")}
 
-          <button 
-            className="btn btn-outline-danger"
-            onClick={handleLogout}
+          <LogoutButton />
+        </div>
+      </div>
+
+      <div className="d-flex justify-content-between mb-3">
+        <input
+          type="text"
+          className="form-control w-50"
+          placeholder="Buscar por nome ou email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <div className="d-flex align-items-center">
+          <label className="me-2">Itens por página:</label>
+
+          <select
+            className="form-select w-auto"
+            value={pageSize}
+            onChange={(e) => {
+            setPage(1);
+            setPageSize(Number(e.target.value));
+            }}
           >
-            Sair
-          </button>
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
         </div>
       </div>
 
@@ -84,12 +131,7 @@ export default function Dashboard() {
                   <td>{u.name}</td>
                   <td>{u.email}</td>
                   <td className="text-end">
-                    <button 
-                      className="btn btn-sm btn-primary me-2"
-                      onClick={() => navigate(`/users/${u.id}/edit`)}
-                    >
-                      Editar
-                    </button>
+                    {createNavigateButton("Editar", `/user/${u.id}/edit`, "sm btn-primary")}
 
                     <DeleteUserButton 
                       id={u.id} 
@@ -106,22 +148,9 @@ export default function Dashboard() {
 
       {/* Paginação */}
       <div className="d-flex justify-content-between align-items-center mt-3">
-        <button 
-          className="btn btn-outline-secondary"
-          disabled={page === 1}
-          onClick={() => setPage(p => p - 1)}
-        >
-          Anterior
-        </button>
-
-        <span>Página {page}</span>
-
-        <button 
-          className="btn btn-outline-secondary"
-          onClick={() => setPage(p => p + 1)}
-        >
-          Próximo
-        </button>
+        {createPaginatedButton("Anterior", page === 1, () => setPage(p => p - 1))}
+        <span>Página {page} de {data.totalPages}</span>
+        {createPaginatedButton("Próximo", page === data.totalPages, () => setPage(p => p + 1))}
       </div>
     </div>
   );

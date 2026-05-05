@@ -10,55 +10,44 @@ import PrivateRoute from "../routes/PrivateRoute";
 import PublicRoute from "../routes/PublicRoute";
 
 export default function AppRoutes() {
+
+  function createPublicRoute(path, element) {
+    return (
+      <Route
+        path={path}
+        element={
+          <PublicRoute>
+            {element}
+          </PublicRoute>
+        }
+      />
+    );
+  }
+
+  function createPrivateRoute(path, element) {
+    return (
+      <Route
+        path={path}
+        element={
+          <PrivateRoute>
+            {element}
+          </PrivateRoute>
+        }
+      />
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
         {/* rotas públicas */}
-        <Route
-          path="/"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
+        {createPublicRoute("/", <Login />)}
+        {createPublicRoute("/login", <Login />)}
 
         {/* rotas protegidas */}
-        <Route
-          path="/users"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/user"
-          element={
-            <PrivateRoute>
-              <UserForm />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/users/:id/edit"
-          element={
-            <PrivateRoute>
-              <UserForm />
-            </PrivateRoute>
-          }
-        />
+        {createPrivateRoute("/users", <Dashboard />)}
+        {createPrivateRoute("/user", <UserForm />)}
+        {createPrivateRoute("/user/:id/edit", <UserForm />)}
       </Routes>
     </BrowserRouter>
   );
