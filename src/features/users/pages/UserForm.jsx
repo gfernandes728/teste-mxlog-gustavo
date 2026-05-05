@@ -30,10 +30,14 @@ export default function UserForm() {
   }, [id]);
 
   const loadUser = async () => {
-    setLoading(true);
-    const res = await getUserById(id);
-    reset(res.data); 
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await getUserById(id);
+      reset(res.data); 
+      setLoading(false);
+    } catch (error) {
+      showErrorAlert(error, "Erro ao carregar usuário");
+    }
   };
 
   const onSubmit = async (data) => {
@@ -46,13 +50,17 @@ export default function UserForm() {
 
       navigate("/users");
     } catch (error) {
-      const message =
-        error?.response?.data ||
-        (isEdit ? "Erro ao editar usuário" : "Erro ao criar usuário");
-
-      alert(message);
+      showErrorAlert(error, (isEdit ? "Erro ao editar usuário" : "Erro ao criar usuário"));
     }
   };
+
+  function showErrorAlert(error, messageDefault) {
+      const message =
+        error?.response?.data ||
+        messageDefault;
+
+      alert(message);
+  }
 
   if (loading) {
     return (
